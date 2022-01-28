@@ -11,7 +11,7 @@ def _block(command):
     dobot.SetQueuedCmdStopExec(api)
 
 # Path to dependent dlls
-dll_path = r'C:\Users\nl13426\Repositories\cri\cri\dobot\magician'
+dll_path = r'D:\Users\Josh\github\individual_project\cri\dobot\magician'
 # os.environ["PATH"] += os.pathsep + os.pathsep.join([dll_path])
 
 # Load Dll and get the CDLL object
