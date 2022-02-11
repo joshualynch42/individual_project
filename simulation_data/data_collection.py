@@ -6,6 +6,7 @@ import matplotlib.pylab as plt # needs to be after initialising controller (stra
 import pandas as pd
 import string
 import time
+import numpy as np
 
 alphabet_list = list(string.ascii_uppercase)
 key_coords = pd.read_csv(r"D:\Users\Josh\github\individual_project\simulation_data\key_coords.csv")
@@ -33,16 +34,27 @@ with SyncRobot(Controller()) as robot, make_sensor() as sensor:
     robot.linear_speed = 40
     robot.coord_frame = [0, 0, 0, 0, 0, 0] # careful
 
+    #z is universal
+    z = -35
+
     for current_letter in line4:
-    #for current_letter in alphabet_list:
-        # current_letter = alphabet_list[i] #temp
         x, y = key_coords.loc[key_coords['Key'] == current_letter]['X'], key_coords.loc[key_coords['Key'] == current_letter]['Y']
+        x = x.to_numpy()[0]
+        y = y.to_numpy()[0]
         print('current letter is {}'.format(current_letter))
-        robot.move_linear([x, y, -10, 0, 0, 0]) #move horizontal
-        robot.move_linear([x, y, -30, 0, 0, 0]) #move vertical - down
-        frames_sync = sensor.process(num_frames=5, start_frame=1, outfile=r'C:/Temp/frames_sync.png')
-        robot.move_linear([x, y, -10, 0, 0, 0]) #move vertical - up
-        time.sleep(1)
+        # add variation to x, y and z coords for training
+        for x_diff in np.linspace(-2, 2, 5):
+            new_x = x + x_diff
+            for y_diff in np.linspace(-2, 2, 5):
+                new_y = y + y_diff
+                for z_diff in np.linspace(-2, 0, 3):
+                    new_z = z + z_diff
+                    varaaa = r"D:\Users\Josh\github\individual_project\simulation_data\key_images\{}\{}_{}-{}.png".format(current_letter,new_x,new_y,new_z)
+                    robot.move_linear([new_x, new_y, -20, 0, 0, 0]) #move horizontal
+                    robot.move_linear([new_x, new_y, new_z, 0, 0, 0]) #move vertical - down
+                    frames_sync = sensor.process(num_frames=1, start_frame=1, outfile=varaaa)
+                    robot.move_linear([new_x, new_y, -20, 0, 0, 0]) #move vertical - up
+                    time.sleep(1)
     #frames_sync = sensor.process(num_frames=5, start_frame=1, outfile=r'D:\Josh\github\individual_project\simulation_data\{}_frames.png'.format(current_letter))
 
     #set robot to a Home
