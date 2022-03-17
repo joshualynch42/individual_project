@@ -16,6 +16,11 @@ line2 = ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L']
 line3 = ['Z', 'X', 'C', 'V', 'B', 'N', 'M']
 line4 = ['SPACE', 'LEFT', 'UP', 'DOWN', 'RIGHT']
 
+all_lines = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', 'A', 'S', 'D',
+            'F', 'G', 'H', 'J', 'K', 'L', 'Z', 'X', 'C', 'V', 'B', 'N', 'M',
+            'SPACE', 'LEFT', 'UP', 'DOWN', 'RIGHT']
+
+xy_diff = [-1.5, -1.25, -0.75, -0.5, -0.25, 0.25, 0.5, 0.75, 1.25, 1.5]
 
 def make_sensor(): # amcap: reset all settings; autoexposure off; saturdation max
     camera = CvPreprocVideoCamera(source=1,
@@ -37,17 +42,17 @@ with SyncRobot(Controller()) as robot, make_sensor() as sensor:
     #z is universal
     z = -35
 
-    for current_letter in line4:
+    for current_letter in all_lines:
         x, y = key_coords.loc[key_coords['Key'] == current_letter]['X'], key_coords.loc[key_coords['Key'] == current_letter]['Y']
         x = x.to_numpy()[0]
         y = y.to_numpy()[0]
         print('current letter is {}'.format(current_letter))
         # add variation to x, y and z coords for training
-        for x_diff in np.linspace(-2, 2, 5):
+        for x_diff in xy_diff:
             new_x = x + x_diff
-            for y_diff in np.linspace(-2, 2, 5):
+            for y_diff in xy_diff:
                 new_y = y + y_diff
-                for z_diff in np.linspace(-2, 0, 3):
+                for z_diff in np.linspace(-2, -1, 2):
                     new_z = z + z_diff
                     varaaa = r"D:\Users\Josh\github\individual_project\simulation_data\key_images\{}\{}_{}-{}.png".format(current_letter,new_x,new_y,new_z)
                     robot.move_linear([new_x, new_y, -20, 0, 0, 0]) #move horizontal
