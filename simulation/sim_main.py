@@ -9,8 +9,8 @@ print(tf.config.list_physical_devices('GPU'))
 # goal_letter = np.array('N')
 # env = discrete_alphabet_env(starting_letter, goal_letter)
 
-env = discrete_arrow_env()
-agent = DQNAgent(env, epsilon_decay=0.999)
+env = one_hot_discrete_arrow_env()
+agent = one_hot_DQNAgent(env, epsilon_decay=0.999)
 
 # agent.load_model('ep1_mb32_rms150_mrm100')
 episodes = 1000
