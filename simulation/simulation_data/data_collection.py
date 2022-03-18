@@ -9,7 +9,8 @@ import time
 import numpy as np
 
 alphabet_list = list(string.ascii_uppercase)
-key_coords = pd.read_csv(r"D:\Users\Josh\github\individual_project\simulation_data\key_coords.csv")
+
+key_coords = pd.read_csv(r"D:\Users\Josh\github\individual_project\simulation\simulation_data\key_coords.csv")
 
 line1 = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P']
 line2 = ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L']
@@ -20,10 +21,11 @@ all_lines = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', 'A', 'S', 'D',
             'F', 'G', 'H', 'J', 'K', 'L', 'Z', 'X', 'C', 'V', 'B', 'N', 'M',
             'SPACE', 'LEFT', 'UP', 'DOWN', 'RIGHT']
 
-xy_diff = [-1.5, -1.25, -0.75, -0.5, -0.25, 0.25, 0.5, 0.75, 1.25, 1.5]
+
+xy_diff = [-1.25, -0.75, -0.5, -0.25, 0.25, 0.5, 0.75, 1.25]
 
 def make_sensor(): # amcap: reset all settings; autoexposure off; saturdation max
-    camera = CvPreprocVideoCamera(source=1,
+    camera = CvPreprocVideoCamera(source=0,  # might need changing for webcam
                 crop=[320-128-10, 240-128+10, 320+128-10, 240+128+10],
                 size=[128, 128],
                 threshold=[61, -5],
@@ -54,7 +56,7 @@ with SyncRobot(Controller()) as robot, make_sensor() as sensor:
                 new_y = y + y_diff
                 for z_diff in np.linspace(-2, -1, 2):
                     new_z = z + z_diff
-                    varaaa = r"D:\Users\Josh\github\individual_project\simulation_data\key_images\{}\{}_{}-{}.png".format(current_letter,new_x,new_y,new_z)
+                    varaaa = r"D:\Users\Josh\github\individual_project\simulation\simulation_data\key_images\{}\{}_{}-{}.png".format(current_letter, new_x,new_y,new_z)
                     robot.move_linear([new_x, new_y, -20, 0, 0, 0]) #move horizontal
                     robot.move_linear([new_x, new_y, new_z, 0, 0, 0]) #move vertical - down
                     frames_sync = sensor.process(num_frames=1, start_frame=1, outfile=varaaa)
