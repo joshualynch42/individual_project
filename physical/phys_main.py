@@ -1,8 +1,24 @@
 import sys
 sys.path.insert(1, 'D:/Josh\github/individual_project/simulation')
-
 from dueling_ddqn_per import *
 from phys_utils import *
+
+def make_sensor(): # amcap: reset all settings; autoexposure off; saturdation max
+    camera = CvPreprocVideoCamera(source=0,  # might need changing for webcam
+                crop=[320-128-10, 240-128+10, 320+128-10, 240+128+10],
+                size=[128, 128],
+                threshold=[61, -5],
+                exposure=-6)
+    for _ in range(5): camera.read() # Hack - camera transient
+
+    return AsyncProcessor(CameraStreamProcessor(camera=camera,
+                display=CvVideoDisplay(name='sensor'),
+                writer=CvImageOutputFileSeq()))
+
+sensor = make_sensor()
+robot = SyncRobot(Controller())
+robot.linear_speed = 40
+robot.coord_frame = [0, 0, 0, 0, 0, 0] # careful
 
 rl_params = {
 'replay_memory_size': 10000,

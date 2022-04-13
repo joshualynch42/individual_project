@@ -11,6 +11,7 @@ import numpy as np
 from msvcrt import getch
 import random, os
 from keras.preprocessing.image import load_img, img_to_array
+from PIL import Image
 
 alphabet_arr = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', 'A', 'S', 'D',
         'F', 'G', 'H', 'J', 'K', 'L', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'SPACE']
@@ -77,13 +78,13 @@ def get_key():
     input_key = input_key.upper()
     return input_key
 
-def get_image(coords):
-    key = coords_to_letter(coords)
-    dir = "D:/Josh/github/individual_project/simulation/simulation_data/key_images/{}/".format(key)
-    file_name = random.choice(os.listdir(dir))
-    img = load_img(dir+file_name, color_mode='grayscale', target_size=(64,64))
-    img = img_to_array(img).astype('float32') / 255
-    return img
+# def get_image(coords):
+#     key = coords_to_letter(coords)
+#     dir = "D:/Josh/github/individual_project/simulation/simulation_data/key_images/{}/".format(key)
+#     file_name = random.choice(os.listdir(dir))
+#     img = load_img(dir+file_name, color_mode='grayscale', target_size=(64,64))
+#     img = img_to_array(img).astype('float32') / 255
+#     return img
 
 def create_state(image, goal_letter):
     one_hot_arr = [0]*(len(key_coords))
@@ -98,12 +99,13 @@ def create_one_hot(letter):
     one_hot_arr[num] = 1
     return np.array(one_hot_arr)
 
-# def get_image(coords):
-#     robot.move_linear([coords[0], coords[1], coords[2], 0, 0, 0])
-#     frames_sync = sensor.process(num_frames=1, start_frame=1, outfile='')
-#     img = load_img(dir+file_name, color_mode='grayscale', target_size=(64,64))
-#     img = img_to_array(img).astype('float32') / 255
-#     return img
+def get_image(coords):
+    robot.move_linear([coords[0], coords[1], coords[2], 0, 0, 0])
+    frames_sync = sensor.process(num_frames=1, start_frame=1, outfile='')
+    img = frames_sync.resize((64,64))
+    img = img.convert('L')
+    img = img_to_array(img).astype('float32') / 255
+    return img
 
 def move_phys_dobot(coords):
     robot.move_linear([coords[0], coords[1], coords[2], 0, 0, 0])
@@ -113,7 +115,7 @@ class phys_discrete_arrow_env(Env):
         self.current_step = 0
         self.starting_letter = random.choice(arrow_arr)
         self.current_coords = letter_to_coords(self.starting_letter)
-        # move_phys_dobot(self.current_coords)
+        move_phys_dobot(self.current_coords)
         self.goal_letter = random.choice(arrow_arr)
         self.action_array = np.array(['up', 'left', 'right', 'down', 'pressdown'])
         self.state = create_state(get_image(self.current_coords), self.goal_letter)
@@ -125,7 +127,7 @@ class phys_discrete_arrow_env(Env):
         self.current_step = 0
         self.starting_letter = random.choice(arrow_arr)
         self.current_coords = letter_to_coords(self.starting_letter)
-        # move_phys_dobot(self.current_coords)
+        move_phys_dobot(self.current_coords)
         self.goal_letter = random.choice(arrow_arr)
         self.state = create_state(get_image(self.current_coords), self.goal_letter)
 
@@ -158,7 +160,7 @@ class phys_discrete_arrow_env(Env):
             print('Error: Not a valid action')
             exit()
         self.current_coords = translate_coord(self.current_coords) #turn coords into real
-        # move_phys_dobot(self.current_coords) #move robot to new coords
+        move_phys_dobot(self.current_coords) #move robot to new coords
         current_img = get_image(self.current_coords) #get new image of state
         self.state = create_state(current_img, self.goal_letter)
 
@@ -173,7 +175,7 @@ class phys_discrete_arrow_env(Env):
                 done = True
                 actual_let = get_key() # get key press from console
                 print(actual_let)
-                # move_phys_dobot(coords) # move dobot to press key
+                move_phys_dobot(coords) # move dobot to press key
                 cur_let = coords_to_letter(self.current_coords)
                 goal_let = self.goal_letter
                 if cur_let == goal_let:
@@ -197,7 +199,7 @@ class phys_discrete_alphabet_env(Env):
         self.current_step = 0
         self.starting_letter = random.choice(alphabet_arr)
         self.current_coords = letter_to_coords(self.starting_letter)
-        # move_phys_dobot(self.current_coords)
+        move_phys_dobot(self.current_coords)
         self.goal_letter = random.choice(alphabet_arr)
         self.action_array = np.array(['upleft', 'upright', 'left', 'right', 'downleft', 'downright', 'pressdown'])
         self.state = create_state(get_image(self.current_coords), self.goal_letter)
@@ -209,7 +211,7 @@ class phys_discrete_alphabet_env(Env):
         self.current_step = 0
         self.starting_letter = random.choice(alphabet_arr)
         self.current_coords = letter_to_coords(self.starting_letter)
-        # move_phys_dobot(self.current_coords)
+        move_phys_dobot(self.current_coords)
         self.goal_letter = random.choice(alphabet_arr)
         self.state = create_state(get_image(self.current_coords), self.goal_letter)
 
@@ -260,7 +262,7 @@ class phys_discrete_alphabet_env(Env):
             print('Error: Not a valid action')
             exit()
         self.current_coords = translate_coord(self.current_coords) #turn coords into real
-        # move_phys_dobot(self.current_coords) #move robot to new coords
+        move_phys_dobot(self.current_coords) #move robot to new coords
         current_img = get_image(self.current_coords) #get new image of state
         self.state = create_state(current_img, self.goal_letter)
 
@@ -273,9 +275,9 @@ class phys_discrete_alphabet_env(Env):
             action = self.action_array[action]
             if action == 'pressdown':
                 done = True
-                # actual_let = get_key() # get key press from console
-                # print('actual letter ', actual_let)
-                # move_phys_dobot(coords) # move dobot to press key
+                actual_let = get_key() # get key press from console
+                print('actual letter ', actual_let)
+                move_phys_dobot(coords) # move dobot to press key
                 cur_let = coords_to_letter(self.current_coords)
                 goal_let = self.goal_letter
                 if cur_let == goal_let:
