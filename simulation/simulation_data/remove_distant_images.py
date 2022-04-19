@@ -28,10 +28,10 @@ for letter in all_lines:
 
         total += 1
 
-        if x_file < x - 1.25 or x_file > x + 1.25:
+        if x_file < x - 1.0 or x_file > x + 1.0:
             counter += 1
             os.remove(temp_path)
-        elif y_file < y - 1.25 or y_file > y + 1.25:
+        elif y_file < y - 1.0 or y_file > y + 1.0:
             counter += 1
             os.remove(temp_path)
 
