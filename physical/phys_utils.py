@@ -16,7 +16,24 @@ from PIL import Image
 alphabet_arr = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', 'A', 'S', 'D',
         'F', 'G', 'H', 'J', 'K', 'L', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'SPACE']
 arrow_arr = ['UP', 'DOWN', 'LEFT', 'RIGHT']
-key_coords = pd.read_csv(r"D:\Josh\github\individual_project\simulation\simulation_data\key_coords.csv")
+key_coords = pd.read_csv(r"D:\Users\Josh\github\individual_project\simulation\simulation_data\key_coords.csv")
+
+def make_sensor(): # amcap: reset all settings; autoexposure off; saturdation max
+    camera = CvPreprocVideoCamera(source=0,  # might need changing for webcam
+                crop=[320-128-10, 240-128+10, 320+128-10, 240+128+10],
+                size=[128, 128],
+                threshold=[61, -5],
+                exposure=-6)
+    for _ in range(5): camera.read() # Hack - camera transient
+
+    return AsyncProcessor(CameraStreamProcessor(camera=camera,
+                display=CvVideoDisplay(name='sensor'),
+                writer=CvImageOutputFileSeq()))
+
+sensor = make_sensor()
+robot = SyncRobot(Controller())
+robot.linear_speed = 40
+robot.coord_frame = [0, 0, 0, 0, 0, 0] # careful
 
 def translate_coord(coords):
     """
@@ -78,14 +95,6 @@ def get_key():
     input_key = input_key.upper()
     return input_key
 
-# def get_image(coords):
-#     key = coords_to_letter(coords)
-#     dir = "D:/Josh/github/individual_project/simulation/simulation_data/key_images/{}/".format(key)
-#     file_name = random.choice(os.listdir(dir))
-#     img = load_img(dir+file_name, color_mode='grayscale', target_size=(64,64))
-#     img = img_to_array(img).astype('float32') / 255
-#     return img
-
 def create_state(image, goal_letter):
     one_hot_arr = [0]*(len(key_coords))
     num = key_coords.index[key_coords['Key'] == goal_letter].tolist()[0]
@@ -100,14 +109,20 @@ def create_one_hot(letter):
     return np.array(one_hot_arr)
 
 def get_image(coords):
+    outfile = r"D:\Users\Josh\github\individual_project\physical\temp_photo.png"
+    robot.move_linear([coords[0], coords[1], -36, 0, 0, 0])
+    frames_sync = sensor.process(num_frames=1, start_frame=1, outfile=outfile)
     robot.move_linear([coords[0], coords[1], coords[2], 0, 0, 0])
-    frames_sync = sensor.process(num_frames=1, start_frame=1, outfile='')
-    img = frames_sync.resize((64,64))
-    img = img.convert('L')
+    dir = "D:/Users/Josh/github/individual_project/physical/temp_photo_0.png"
+    img = load_img(dir, color_mode='grayscale', target_size=(64,64))
     img = img_to_array(img).astype('float32') / 255
     return img
 
 def move_phys_dobot(coords):
+    robot.move_linear([coords[0], coords[1], coords[2], 0, 0, 0])
+
+def press_phys_dobot(coords):
+    robot.move_linear([coords[0], coords[1], -38, 0, 0, 0])
     robot.move_linear([coords[0], coords[1], coords[2], 0, 0, 0])
 
 class phys_discrete_arrow_env(Env):
@@ -119,7 +134,7 @@ class phys_discrete_arrow_env(Env):
         self.goal_letter = random.choice(arrow_arr)
         self.action_array = np.array(['up', 'left', 'right', 'down', 'pressdown'])
         self.state = create_state(get_image(self.current_coords), self.goal_letter)
-        self.img_shape = np.shape(get_image(self.current_coords))
+        self.img_shape = np.shape(self.state['img'])
         self.max_ep_len = 25
         self.action_space_size = len(self.action_array)
 
@@ -138,23 +153,23 @@ class phys_discrete_arrow_env(Env):
 
         if action == 'up':  # all values become up key
             if self.current_coords[0] != 2 or self.current_coords[1] != 43:
-                self.current_coords = np.array([2, 43, -37])
+                self.current_coords = np.array([2, 43, -25])
 
         elif action == 'right':
             if self.current_coords[1] == 43:  # up and down become right
-                self.current_coords = np.array([3, 46, -37])
+                self.current_coords = np.array([3, 46, -25])
             elif self.current_coords[1] == 40:
-                self.current_coords = np.array([3, 43, -37])
+                self.current_coords = np.array([3, 43, -25])
 
         elif action == 'left':
             if self.current_coords[1] == 43:  # up and down become right
-                self.current_coords = np.array([3, 40, -37])
+                self.current_coords = np.array([3, 40, -25])
             elif self.current_coords[1] == 46:
-                self.current_coords = np.array([3, 43, -37])
+                self.current_coords = np.array([3, 43, -25])
 
         elif action == 'down':
             if self.current_coords[0] == 2 and self.current_coords[1] == 43:
-                self.current_coords = np.array([3, 43, -37])
+                self.current_coords = np.array([3, 43, -25])
 
         else:
             print('Error: Not a valid action')
@@ -173,9 +188,9 @@ class phys_discrete_arrow_env(Env):
             action = self.action_array[action]
             if action == 'pressdown':
                 done = True
-                actual_let = get_key() # get key press from console
-                print(actual_let)
-                move_phys_dobot(coords) # move dobot to press key
+                # press_phys_dobot(self.current_coords) # move dobot to press key
+                # actual_let = get_key() # get key press from console
+                # print(actual_let)
                 cur_let = coords_to_letter(self.current_coords)
                 goal_let = self.goal_letter
                 if cur_let == goal_let:
@@ -204,7 +219,7 @@ class phys_discrete_alphabet_env(Env):
         self.action_array = np.array(['upleft', 'upright', 'left', 'right', 'downleft', 'downright', 'pressdown'])
         self.state = create_state(get_image(self.current_coords), self.goal_letter)
         self.img_shape = np.shape(get_image(self.current_coords))
-        self.max_ep_len = 40
+        self.max_ep_len = 16
         self.action_space_size = len(self.action_array)
 
     def reset(self):
@@ -222,13 +237,13 @@ class phys_discrete_alphabet_env(Env):
 
         if action == 'upleft':
             if self.current_coords[0] == 3 and self.current_coords[1] == 14:
-                self.current_coords = np.array([2, 11, -37])
+                self.current_coords = np.array([2, 11, -25])
             elif self.current_coords[0] > 0 and self.current_coords[1] > 0:
                 self.current_coords = self.current_coords + np.array([-1, -1, 0])
 
         elif action == 'upright':
             if self.current_coords[0] == 3 and self.current_coords[1] == 14:
-                self.current_coords = np.array([2, 14, -37])
+                self.current_coords = np.array([2, 14, -25])
             elif self.current_coords[0] > 0:
                 self.current_coords = self.current_coords + np.array([-1, 2, 0])
 
@@ -248,7 +263,7 @@ class phys_discrete_alphabet_env(Env):
             elif self.current_coords[0] < 2 and self.current_coords[1] > 2:
                 self.current_coords = self.current_coords + np.array([1, -2, 0])
             elif self.current_coords[0] == 2 and self.current_coords[1] > 5: # bottom row not z or x
-                self.current_coords = np.array([3, 14, -37])
+                self.current_coords = np.array([3, 14, -25])
 
         elif action == 'downright':
             if self.current_coords[0] == 1 and self.current_coords[1] > 19:
@@ -256,7 +271,7 @@ class phys_discrete_alphabet_env(Env):
             elif self.current_coords[0] < 2 and self.current_coords[1] < 25:
                 self.current_coords = self.current_coords + np.array([1, 1, 0])
             elif self.current_coords[0] == 2 and self.current_coords[1] > 2: # bottom row not z
-                self.current_coords = np.array([3, 14, -37])
+                self.current_coords = np.array([3, 14, -25])
 
         else:
             print('Error: Not a valid action')
@@ -275,9 +290,9 @@ class phys_discrete_alphabet_env(Env):
             action = self.action_array[action]
             if action == 'pressdown':
                 done = True
-                actual_let = get_key() # get key press from console
-                print('actual letter ', actual_let)
-                move_phys_dobot(coords) # move dobot to press key
+                # press_phys_dobot(self.current_coords) # move dobot to press key
+                # actual_let = get_key() # get key press from console
+                # print('actual letter', actual_let)
                 cur_let = coords_to_letter(self.current_coords)
                 goal_let = self.goal_letter
                 if cur_let == goal_let:

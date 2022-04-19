@@ -1,6 +1,7 @@
 import sys
 sys.path.insert(1, 'D:/Users/Josh/github/individual_project/simulation')
 from dueling_ddqn_per import *
+<<<<<<< Updated upstream
 from phys_utils import *
 import time
 
@@ -20,6 +21,13 @@ sensor = make_sensor()
 robot = SyncRobot(Controller())
 robot.linear_speed = 40
 robot.coord_frame = [0, 0, 0, 0, 0, 0] # careful
+=======
+# from phys_utils import *
+import numpy as np
+from keras.preprocessing.image import load_img, img_to_array
+import matplotlib.pyplot as plt
+import gym
+>>>>>>> Stashed changes
 
 rl_params = {
 'replay_memory_size': 10000,
@@ -31,11 +39,13 @@ rl_params = {
 'min_epsilon': 0.001,
 'epsilon': 0,
 'update_target_every': 1,
-'episodes': 500
+'episodes': 2
 }
 
 avg_rew_size = 1
+model_dir = "D:/Users/Josh/github/individual_project/simulation/sim_agents/alphabet_Dueling Double Per.h5"
 
+<<<<<<< Updated upstream
 # # TIMING ##
 # total_time_dict = {}
 # time_per_ep_dict = {}
@@ -122,4 +132,95 @@ plt.plot(x, avg_reward_arr, label=agent.label)
 plt.xlabel('episode')
 plt.ylabel('reward')
 plt.legend()
+=======
+env = gym.make('ALE/Pong-v5')
+state = env.reset()
+plt.imshow(state)
+>>>>>>> Stashed changes
 plt.show()
+
+# env = phys_discrete_alphabet_env()
+# agent = Dueling_Per_DDQNAgent(env, rl_params)
+# agent.load_model(model_dir)
+#
+# train_type = 'zero_shot'
+# goals_failed = []
+# starts_failed = []
+# reward_arr = []
+# episodes = rl_params['episodes']
+# success_arr = np.array([0]*episodes)
+# for episode in range(episodes):
+#     reward_tot = 0
+#     done = False
+#     success = False
+#     steps = 0
+#     current_state = env.reset()
+#     hindsight_buffer = her()
+#     letter_path = [env.starting_letter]
+#     # print('start letter: {}, goal_letter: {}'.format(env.starting_letter, env.goal_letter))
+#     while not done and steps < env.max_ep_len:
+#         steps += 1
+#         starting_let = coords_to_letter(env.current_coords)
+#         action = agent.act(current_state)
+#         # print('start letter: {}, action: {}'.format(starting_let, env.action_array[action]))
+#         new_state, reward, done, info = env.step(action, steps)
+#         done = False if steps == env.max_ep_len else done
+#         if train_type != 'zero_shot':
+#             agent.update_replay_memory((current_state, action, reward, new_state, done))
+#             hindsight_buffer.update_her_buffer((current_state, action, reward, new_state, done))
+#         reward_tot += reward
+#         letter_path.append(coords_to_letter(env.current_coords))
+#         # print('new_letter: {}'.format(coords_to_letter(env.current_coords)))
+#
+#         if reward == 1:
+#             success = True
+#             success_arr[episode] = 1
+#
+#         if train_type != 'zero_shot':
+#             agent.train(done)
+#         current_state = new_state
+#
+#     if reward_tot == 0 and done == True and steps != env.max_ep_len: # HER
+#         # Assume final key was goal key for HER
+#         # find out current key
+#         final_letter = coords_to_letter(env.current_coords)
+#         # turn current key into one one_hot
+#         one_hot = create_one_hot(final_letter)
+#         # iterate through all steps in episode
+#         for step in range(steps):
+#             # change goals and rewards from old transition to new goal
+#             transition = hindsight_buffer.update_transition(step, one_hot, steps)
+#             # add new values to replay memory
+#             agent.update_replay_memory(transition)
+#
+#     if reward_tot == 0:
+#         goals_failed.append(env.goal_letter)
+#         starts_failed.append(env.starting_letter)
+#     reward_arr.append(reward_tot)
+#
+#     print(letter_path)
+#     print('episode: {}, reward: {}, epsilon: {}, steps: {}, start letter: {}, '
+#                                 'goal_letter: {}, end_letter: {}, success: {}, done: {}'.
+#     format(episode, reward_tot, round(agent.epsilon, 3), steps, env.starting_letter,
+#                 env.goal_letter, coords_to_letter(env.current_coords), success, done))
+#
+# # calculating moving average of reward array
+# avg_reward_arr = [] # calcualting moving average
+# for i in range(len(reward_arr) - avg_rew_size +1):
+#     this_window = reward_arr[i : i + avg_rew_size]
+#     window_average = sum(this_window) / avg_rew_size
+#     avg_reward_arr.append(window_average)
+#
+#
+# model_dir = "D:/Users/Josh/github/individual_project/simulation/phys_agents/alphabet_Dueling Double Per.h5"
+# agent.save_model(model_dir)
+#
+# x = np.linspace(avg_rew_size, episodes, episodes-avg_rew_size+1)
+# plt.plot(x, avg_reward_arr, label=agent.label)
+#
+# print('Failed starting letters', starts_failed)
+# print('Failed goal letters', goals_failed)
+# plt.xlabel('Episode')
+# plt.ylabel('Reward')
+# plt.legend()
+# plt.show()

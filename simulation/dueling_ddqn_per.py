@@ -168,11 +168,11 @@ class Dueling_Per_DDQNAgent():
     def render(self, reward_arr):
         pass
 
-    def save_model(self, episodes):
-        self.model.save("D:/Josh/github/individual_project/simulation/sim_agents/alphabet_{}.h5".format(self.label))
+    def save_model(self, model_dir):
+        self.model.save(model_dir)
 
-        print('Agent saved as alphabet_{}.h5'.format(self.label))
+        print('Agent saved as '.format(model_dir))
 
-    def load_model(self, model_name):
-        self.model = keras.models.load_model("D:/Josh/github/individual_project/simulation/sim_agents/{}.h5".format(model_name))
-        print('Agent {} has loaded'.format(model_name))
+    def load_model(self, model_dir):
+        self.model = keras.models.load_model(model_dir)
+        print('Agent {} has loaded'.format(model_dir))
