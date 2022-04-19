@@ -2,6 +2,7 @@ import sys
 sys.path.insert(1, 'D:/Users/Josh/github/individual_project/simulation')
 from dueling_ddqn_per import *
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 from phys_utils import *
 import time
 
@@ -22,11 +23,16 @@ robot = SyncRobot(Controller())
 robot.linear_speed = 40
 robot.coord_frame = [0, 0, 0, 0, 0, 0] # careful
 =======
+=======
+>>>>>>> Stashed changes
 # from phys_utils import *
 import numpy as np
 from keras.preprocessing.image import load_img, img_to_array
 import matplotlib.pyplot as plt
 import gym
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
 rl_params = {
@@ -44,6 +50,7 @@ rl_params = {
 
 avg_rew_size = 1
 model_dir = "D:/Users/Josh/github/individual_project/simulation/sim_agents/alphabet_Dueling Double Per.h5"
+<<<<<<< Updated upstream
 
 <<<<<<< Updated upstream
 # # TIMING ##
@@ -133,6 +140,12 @@ plt.xlabel('episode')
 plt.ylabel('reward')
 plt.legend()
 =======
+env = gym.make('ALE/Pong-v5')
+state = env.reset()
+plt.imshow(state)
+>>>>>>> Stashed changes
+=======
+
 env = gym.make('ALE/Pong-v5')
 state = env.reset()
 plt.imshow(state)

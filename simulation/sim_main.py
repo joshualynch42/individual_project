@@ -13,8 +13,13 @@ rl_params = {
 'replay_memory_size': 10000,
 'minibatch_size': 64,
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 'epsilon_decay': 0.9995, # for alphabet
 # 'epsilon_decay': 0.995, # for arrows
+=======
+# 'epsilon_decay': 0.9995, # for alphabet
+'epsilon_decay': 0.995, # for arrows
+>>>>>>> Stashed changes
 =======
 # 'epsilon_decay': 0.9995, # for alphabet
 'epsilon_decay': 0.995, # for arrows
@@ -25,8 +30,12 @@ rl_params = {
 'epsilon': 1,
 'update_target_every': 1,
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 'episodes': 4000
 # 'episodes': 500
+=======
+'episodes': 500
+>>>>>>> Stashed changes
 =======
 'episodes': 500
 >>>>>>> Stashed changes
