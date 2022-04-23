@@ -12,39 +12,20 @@ plt.rcParams.update({'font.size': 18})
 rl_params = {
 'replay_memory_size': 10000,
 'minibatch_size': 64,
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 'epsilon_decay': 0.9995, # for alphabet
 # 'epsilon_decay': 0.995, # for arrows
-=======
-# 'epsilon_decay': 0.9995, # for alphabet
-'epsilon_decay': 0.995, # for arrows
->>>>>>> Stashed changes
-=======
-# 'epsilon_decay': 0.9995, # for alphabet
-'epsilon_decay': 0.995, # for arrows
->>>>>>> Stashed changes
 'discount': 0.95,
 'min_replay_memory_size': 200,
 'min_epsilon': 0.001,
 'epsilon': 1,
 'update_target_every': 1,
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 'episodes': 4000
 # 'episodes': 500
-=======
-'episodes': 500
->>>>>>> Stashed changes
-=======
-'episodes': 500
->>>>>>> Stashed changes
 }
 
 key_image_loc = 'key_images'
 # key_image_loc = 'alex_key_images'
 
-<<<<<<< Updated upstream
 avg_rew_size = 200
 # avg_rew_size = 50
 
@@ -156,7 +137,6 @@ print('Time per episode ', time_per_ep_dict)
 print('Time per step ', time_per_step_dict)
 print('Time to converge ', time_to_converge_dict)
 print('Accuracy ', acc_300_dict)
-=======
 avg_rew_size = 50
 
 env = discrete_arrow_env(key_image_loc)
@@ -224,7 +204,6 @@ x = np.linspace(avg_rew_size, episodes, episodes-avg_rew_size+1)
 plt.plot(x, avg_reward_arr, label=agent.label)
 
 agent.save_model(episodes)
->>>>>>> Stashed changes
 
 # colormap = np.array(['r', 'g'])
 # x = np.linspace(1, episodes, episodes)

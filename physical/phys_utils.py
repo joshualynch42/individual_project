@@ -32,7 +32,7 @@ def make_sensor(): # amcap: reset all settings; autoexposure off; saturdation ma
 
 sensor = make_sensor()
 robot = SyncRobot(Controller())
-robot.linear_speed = 40
+robot.linear_speed = 60
 robot.coord_frame = [0, 0, 0, 0, 0, 0] # careful
 
 def translate_coord(coords):
@@ -110,7 +110,7 @@ def create_one_hot(letter):
 
 def get_image(coords):
     outfile = r"D:\Users\Josh\github\individual_project\physical\temp_photo.png"
-    robot.move_linear([coords[0], coords[1], -36, 0, 0, 0])
+    robot.move_linear([coords[0], coords[1], -35.5, 0, 0, 0])
     frames_sync = sensor.process(num_frames=1, start_frame=1, outfile=outfile)
     robot.move_linear([coords[0], coords[1], coords[2], 0, 0, 0])
     dir = "D:/Users/Josh/github/individual_project/physical/temp_photo_0.png"
@@ -310,3 +310,27 @@ class phys_discrete_alphabet_env(Env):
 
     def render(self):
         pass
+
+class her():
+    def __init__(self):
+        self.her_buffer = []
+
+    def update_her_buffer(self, transition):
+        self.her_buffer.append(transition)
+
+    def sample(self, index):
+        return self.her_buffer[index]
+
+    def update_transition(self, index, new_goal, max_steps):
+        current_state, action, reward, new_state, done = self.sample(index)
+        temp_current_state = current_state.copy()
+        temp_new_state = new_state.copy()
+        temp_current_state['vec'] = new_goal
+        temp_new_state['vec'] = new_goal
+
+        if index == max_steps-1:
+            new_reward = 1
+        else:
+            new_reward = 0
+
+        return (temp_current_state, action, new_reward, temp_new_state, done)
