@@ -7,42 +7,56 @@ print(tf.config.list_physical_devices('GPU'))
 
 plt.rcParams.update({'font.size': 18})
 
+key_image_loc = 'key_images'
+# key_image_loc = 'alex_key_images'
 # agent.load_model('ep1_mb32_rms150_mrm100')
+
+environment = 'arrow' # arrow, alphabet
+timing = True
+test = True
+save_model_bool = True
 
 rl_params = {
 'replay_memory_size': 10000,
 'minibatch_size': 64,
 'epsilon_decay': 0.9995, # for alphabet
-# 'epsilon_decay': 0.995, # for arrows
 'discount': 0.95,
 'min_replay_memory_size': 200,
 'min_epsilon': 0.001,
 'epsilon': 1,
 'update_target_every': 1,
 'episodes': 4000
-# 'episodes': 500
 }
 
-key_image_loc = 'key_images'
-# key_image_loc = 'alex_key_images'
+if environment == 'arrow':
+    rl_params['episodes'] = 1000
+    rl_params['epsilon_decay'] = 0.995
+    avg_rew_size = 50
+    env = discrete_arrow_env(key_image_loc)
+    accuracy_point = 300
+else:
+    rl_params['episodes'] = 5000
+    rl_params['epsilon_decay'] = 0.9995
+    avg_rew_size = 200
+    env = discrete_alphabet_env(key_image_loc)
+    accuracy_point = 3000
 
-avg_rew_size = 200
-# avg_rew_size = 50
-
-# TIMING ##
-total_time_dict = {}
-time_per_ep_dict = {}
-time_per_step_dict = {}
-time_to_converge_dict = {}
-acc_300_dict = {}
-accuracy_point = 3000
+    # TIMING ##
+if timing == True:
+    total_time_dict = {}
+    time_per_ep_dict = {}
+    time_per_step_dict = {}
+    time_to_converge_dict = {}
+    acc_300_dict = {}
 
 for iii in range(4):
-    start_time = time.time()
-    converge_time = time.time()
-    converge_bool = False
+    if timing == True:
+        start_time = time.time()
+        converge_time = time.time()
+        converge_bool = False
+    test_start = False
+
     total_steps = 0
-    env = discrete_alphabet_env(key_image_loc)
     if iii == 0:
         agent = Dueling_Per_DDQNAgent(env, rl_params)
     elif iii == 1:
@@ -57,6 +71,10 @@ for iii in range(4):
     episodes = rl_params['episodes']
     success_arr = np.array([0]*episodes)
     for episode in range(episodes):
+        if test == True and episode >= accuracy_point and test_start == False:
+            agent.epsilon = 0
+            agent.min_epsilon = 0
+            test_start = True
         reward_tot = 0
         done = False
         success = False
@@ -99,7 +117,7 @@ for iii in range(4):
         reward_arr.append(reward_tot)
 
         ### CHECK CONVERGE ### 95%
-        if len(reward_arr) > 20 and converge_bool == False:
+        if timing == True and len(reward_arr) > 20 and converge_bool == False:
             mean = sum(reward_arr[episode-20: episode]) / 20
             if mean >= 0.95:
                 converge_bool = True
@@ -111,13 +129,14 @@ for iii in range(4):
                     env.goal_letter, coords_to_letter(env.current_coords), success, done))
 
     ### TIMINGS ###
-    end_time = time.time()
-    time_elapsed = end_time - start_time
-    total_time_dict[agent.label] = time_elapsed
-    time_per_ep_dict[agent.label] = time_elapsed/episodes
-    time_per_step_dict[agent.label] = time_elapsed/total_steps
-    time_to_converge_dict[agent.label] = converge_time - start_time
-    acc_300_dict[agent.label] = sum(reward_arr[accuracy_point:-1]) / (episodes - accuracy_point)
+    if timing == True:
+        end_time = time.time()
+        time_elapsed = end_time - start_time
+        total_time_dict[agent.label] = time_elapsed
+        time_per_ep_dict[agent.label] = time_elapsed/episodes
+        time_per_step_dict[agent.label] = time_elapsed/total_steps
+        time_to_converge_dict[agent.label] = converge_time - start_time
+        acc_300_dict[agent.label] = sum(reward_arr[accuracy_point:-1]) / (episodes - accuracy_point)
 
     # calculating moving average of reward array
     avg_reward_arr = [] # calcualting moving average
@@ -129,14 +148,17 @@ for iii in range(4):
     x = np.linspace(avg_rew_size, episodes, episodes-avg_rew_size+1)
     plt.plot(x, avg_reward_arr, label=agent.label)
 
-# agent.save_model(episodes)
+    if save_model_bool == True:
+        model_dir = "D:\Josh\github\individual_project\simulation\sim_agents\{}_{}.h5".format(environment, agent.label)
+        agent.save_model(model_dir)
 
 ### PRINT TIMINGS ###
-print('Total time ', total_time_dict)
-print('Time per episode ', time_per_ep_dict)
-print('Time per step ', time_per_step_dict)
-print('Time to converge ', time_to_converge_dict)
-print('Accuracy ', acc_300_dict)
+if timing == True:
+    print('Total time ', total_time_dict)
+    print('Time per episode ', time_per_ep_dict)
+    print('Time per step ', time_per_step_dict)
+    print('Time to converge ', time_to_converge_dict)
+    print('Accuracy ', acc_300_dict)
 
 # colormap = np.array(['r', 'g'])
 # x = np.linspace(1, episodes, episodes)

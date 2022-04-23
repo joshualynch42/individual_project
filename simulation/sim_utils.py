@@ -276,6 +276,87 @@ class discrete_arrow_env(Env):
     def render(self):
         pass
 
+class discrete_arrow_env_pong(Env):
+    def __init__(self, key_image_loc, current_letter, goal_letter):
+        self.key_image_loc = key_image_loc
+        self.current_step = 0
+        self.starting_letter = current_letter
+        self.goal_letter = goal_letter
+        self.current_coords = letter_to_coords(self.starting_letter)
+        self.action_array = np.array(['up', 'left', 'right', 'down', 'pressdown'])
+        self.state = create_state(get_image(self.starting_letter, self.key_image_loc), self.goal_letter)
+        self.img_shape = np.shape(get_image(self.starting_letter, self.key_image_loc))
+        self.max_ep_len = 25
+        self.action_space_size = len(self.action_array)
+
+    def reset(self, key_image_loc, current_letter, goal_letter):
+        self.key_image_loc = key_image_loc
+        self.current_step = 0
+        self.starting_letter = current_letter
+        self.goal_letter = goal_letter
+        self.state = create_state(get_image(self.starting_letter, self.key_image_loc), self.goal_letter)
+        self.current_coords = letter_to_coords(self.starting_letter)
+
+        return self.state
+
+    def move_dobot(self, action):
+        self.current_coords = translate_coord(self.current_coords) #turn coords into imaginary
+
+        if action == 'up':  # all values become up key
+            if self.current_coords[0] != 2 or self.current_coords[1] != 43:
+                self.current_coords = np.array([2, 43, -37])
+
+        elif action == 'right':
+            if self.current_coords[1] == 43:  # up and down become right
+                self.current_coords = np.array([3, 46, -37])
+            elif self.current_coords[1] == 40:
+                self.current_coords = np.array([3, 43, -37])
+
+        elif action == 'left':
+            if self.current_coords[1] == 43:  # up and down become right
+                self.current_coords = np.array([3, 40, -37])
+            elif self.current_coords[1] == 46:
+                self.current_coords = np.array([3, 43, -37])
+
+        elif action == 'down':
+            if self.current_coords[0] == 2 and self.current_coords[1] == 43:
+                self.current_coords = np.array([3, 43, -37])
+
+        else:
+            print('Error: Not a valid action')
+            exit()
+        self.current_coords = translate_coord(self.current_coords) #turn coords into real
+        current_img = get_image(coords_to_letter(self.current_coords), self.key_image_loc) #get new image of state
+        self.state = create_state(current_img, self.goal_letter)
+
+    def step(self, action, steps):
+        done = False
+        info = []
+        if steps > self.max_ep_len -1:
+            reward = 0
+            done = True
+        else:
+            action = self.action_array[action]
+            if action == 'pressdown':
+                done = True
+                cur_let = coords_to_letter(self.current_coords)
+                goal_let = self.goal_letter
+                if cur_let == goal_let:
+                    reward = 1
+                else:
+                    reward = 0
+            else:
+                reward = 0
+                prev_state = self.current_coords
+                self.move_dobot(action)
+                if np.array_equal(prev_state, self.current_coords, equal_nan=False):
+                    reward = 0  # potential punishment for not leaving the key
+
+        return self.state, reward, done, info
+
+    def render(self):
+        pass
+
 class her():
     def __init__(self):
         self.her_buffer = []
@@ -299,3 +380,9 @@ class her():
             new_reward = 0
 
         return (temp_current_state, action, new_reward, temp_new_state, done)
+
+# Total time  {'Dueling Double Per': 5777.078883647919, 'Dueling Double': 5307.563995599747, 'Double': 6290.137100934982, 'DQN': 18023.595147132874}
+# Time per episode  {'Dueling Double Per': 1.4442697209119797, 'Dueling Double': 1.3268909988999367, 'Double': 1.5725342752337457, 'DQN': 4.505898786783218}
+# Time per step  {'Dueling Double Per': 0.16173233156909067, 'Dueling Double': 0.14863795215637243, 'Double': 0.1486151707249848, 'DQN': 0.48245610437209896}
+# Time to converge  {'Dueling Double Per': 1669.2125761508942, 'Dueling Double': 1533.3919150829315, 'Double': 2873.925731420517, 'DQN': 14544.932728528976}
+# Accuracy  {'Dueling Double Per': 0.989, 'Dueling Double': 0.993, 'Double': 0.982, 'DQN': 0.98}
