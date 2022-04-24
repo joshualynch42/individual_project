@@ -276,6 +276,107 @@ class discrete_arrow_env(Env):
     def render(self):
         pass
 
+
+class discrete_alphabet_env_pong(Env):
+    def __init__(self, key_image_loc, current_letter, goal_letter):
+        self.key_image_loc = key_image_loc
+        self.current_step = 0
+        self.starting_letter = current_letter
+        self.goal_letter = goal_letter
+        self.current_coords = letter_to_coords(self.starting_letter)
+        self.action_array = np.array(['upleft', 'upright', 'left', 'right', 'downleft', 'downright', 'pressdown'])
+        self.state = create_state(get_image(self.starting_letter, self.key_image_loc), self.goal_letter)
+        self.img_shape = np.shape(get_image(self.starting_letter, self.key_image_loc))
+        self.max_ep_len = 40
+        self.action_space_size = len(self.action_array)
+
+    def reset(self, key_image_loc, current_letter, goal_letter):
+        self.key_image_loc = key_image_loc
+        self.current_step = 0
+        self.starting_letter = current_letter
+        self.goal_letter = goal_letter
+        self.state = create_state(get_image(self.starting_letter, self.key_image_loc), self.goal_letter)
+        self.current_coords = letter_to_coords(self.starting_letter)
+
+        return self.state
+
+    def move_dobot(self, action):
+        self.current_coords = translate_coord(self.current_coords) #turn coords into imaginary
+
+        if action == 'upleft':
+            if self.current_coords[0] == 3 and self.current_coords[1] == 14:
+                self.current_coords = np.array([2, 11, -37])
+            elif self.current_coords[0] > 0 and self.current_coords[1] > 0:
+                self.current_coords = self.current_coords + np.array([-1, -1, 0])
+
+        elif action == 'upright':
+            if self.current_coords[0] == 3 and self.current_coords[1] == 14:
+                self.current_coords = np.array([2, 14, -37])
+            elif self.current_coords[0] > 0:
+                self.current_coords = self.current_coords + np.array([-1, 2, 0])
+
+        elif action == 'left':
+            if self.current_coords[0] < 3 and self.current_coords[1] > 2:
+                self.current_coords = self.current_coords + np.array([0, -3, 0])
+
+        elif action == 'right':
+            if self.current_coords[0] < 2 and self.current_coords[1] < 25:
+                self.current_coords = self.current_coords + np.array([0, 3, 0])
+            elif self.current_coords[0] < 3 and self.current_coords[1] < 18:
+                self.current_coords = self.current_coords + np.array([0, 3, 0])
+
+        elif action == 'downleft':
+            if self.current_coords[0] == 1 and self.current_coords[1] > 24:
+                pass
+            elif self.current_coords[0] < 2 and self.current_coords[1] > 2:
+                self.current_coords = self.current_coords + np.array([1, -2, 0])
+            elif self.current_coords[0] == 2 and self.current_coords[1] > 5: # bottom row not z or x
+                self.current_coords = np.array([3, 14, -37])
+
+        elif action == 'downright':
+            if self.current_coords[0] == 1 and self.current_coords[1] > 19:
+                pass
+            elif self.current_coords[0] < 2 and self.current_coords[1] < 25:
+                self.current_coords = self.current_coords + np.array([1, 1, 0])
+            elif self.current_coords[0] == 2 and self.current_coords[1] > 2: # bottom row not z
+                self.current_coords = np.array([3, 14, -37])
+
+        else:
+            print('Error: Not a valid action')
+            exit()
+        self.current_coords = translate_coord(self.current_coords) #turn coords into real
+        current_img = get_image(coords_to_letter(self.current_coords), self.key_image_loc) #get new image of state
+        self.state = create_state(current_img, self.goal_letter)
+
+    def step(self, action, steps):
+        if steps > self.max_ep_len -1:
+            done = True
+            reward = 0
+            info = []
+        else:
+            action = self.action_array[action]
+            done = False
+            info = []
+            if action == 'pressdown':
+                done = True
+                cur_let = coords_to_letter(self.current_coords)
+                goal_let = self.goal_letter
+                if cur_let == goal_let:
+                    reward = 1
+                else:
+                    reward = 0
+            else:
+                reward = 0
+                prev_state = self.current_coords
+                self.move_dobot(action)
+                if np.array_equal(prev_state, self.current_coords, equal_nan=False):
+                    reward = 0  # potential punishment for not leaving the key
+
+        return self.state, reward, done, info
+
+    def render(self):
+        pass
+
 class discrete_arrow_env_pong(Env):
     def __init__(self, key_image_loc, current_letter, goal_letter):
         self.key_image_loc = key_image_loc

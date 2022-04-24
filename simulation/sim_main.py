@@ -11,10 +11,10 @@ key_image_loc = 'key_images'
 # key_image_loc = 'alex_key_images'
 # agent.load_model('ep1_mb32_rms150_mrm100')
 
-environment = 'arrow' # arrow, alphabet
+environment = 'alphabet' # arrow, alphabet
 timing = True
 test = True
-save_model_bool = True
+save_model_bool = False
 
 rl_params = {
 'replay_memory_size': 10000,
@@ -29,17 +29,17 @@ rl_params = {
 }
 
 if environment == 'arrow':
-    rl_params['episodes'] = 1000
+    rl_params['episodes'] = 100
     rl_params['epsilon_decay'] = 0.995
     avg_rew_size = 50
     env = discrete_arrow_env(key_image_loc)
-    accuracy_point = 300
+    accuracy_point = 1
 else:
-    rl_params['episodes'] = 5000
+    rl_params['episodes'] = 100
     rl_params['epsilon_decay'] = 0.9995
-    avg_rew_size = 200
+    avg_rew_size = 1
     env = discrete_alphabet_env(key_image_loc)
-    accuracy_point = 3000
+    accuracy_point = 1
 
     # TIMING ##
 if timing == True:
@@ -49,7 +49,7 @@ if timing == True:
     time_to_converge_dict = {}
     acc_300_dict = {}
 
-for iii in range(4):
+for iii in range(2):
     if timing == True:
         start_time = time.time()
         converge_time = time.time()
@@ -58,13 +58,21 @@ for iii in range(4):
 
     total_steps = 0
     if iii == 0:
+        model_dir = "D:/Josh/github/individual_project/simulation/sim_agents/alphabet_Dueling Double Per1.h5"
         agent = Dueling_Per_DDQNAgent(env, rl_params)
+        agent.load_model(model_dir)
     elif iii == 1:
+        model_dir = "D:/Josh/github/individual_project/simulation/sim_agents/alphabet_Dueling Double.h5"
         agent = Dueling_DDQNAgent(env, rl_params)
+        agent.load_model(model_dir)
     elif iii == 2:
+        model_dir = "D:/Josh/github/individual_project/simulation/sim_agents/arrow_Double.h5"
         agent = Double_DQNAgent(env, rl_params)
+        agent.load_model(model_dir)
     else:
+        model_dir = "D:/Josh/github/individual_project/simulation/sim_agents/arrow_DQN.h5"
         agent = DQNAgent(env, rl_params)
+        agent.load_model(model_dir)
 
     HER = True
     reward_arr = []
@@ -91,7 +99,8 @@ for iii in range(4):
             hindsight_buffer.update_her_buffer((current_state, action, reward, new_state, done))
             reward_tot += reward
 
-            # print('start letter: {}, action: {}, current_letter: {}'. format(starting_let, env.action_array[action], coords_to_letter(env.current_coords, file_na)))
+            # print('start letter: {}, action: {}, current_letter: {}'.
+            # format(starting_let, env.action_array[action], coords_to_letter(env.current_coords, file_na)))
 
             if reward == 1:
                 success = True
