@@ -78,3 +78,4 @@ while not dones[0]:
         else:
             obs, rewards, dones, info = env_p.step(action_p)
             env_p.render()
+            input()
