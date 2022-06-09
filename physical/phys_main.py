@@ -28,8 +28,8 @@ acc_300_dict = {}
 accuracy_point = 1
 
 # SAVE MODEL??????
-train_type = 'test_transfer_learning'
-environment = 'alphabet'
+train_type = 'zero_shot'
+environment = 'arrow'
 
 
 ### TIMING ###
@@ -46,11 +46,11 @@ else:
     env = phys_discrete_alphabet_env()
     rl_params['epsilon_decay'] = 0.9995
 
-model_dir = "D:/Users/Josh/github/individual_project/simulation/sim_agents/{}_Dueling Double Per.h5".format(environment)
+model_dir = "D:/Users/Josh/github/individual_project/physical/phys_agents/arrow_phys_Dueling Double Per.h5"
 
 if train_type == 'zero_shot':
     rl_params['epsilon'] = 0
-    rl_params['episodes'] = 100
+    rl_params['episodes'] = 20
     avg_rew_size = int(rl_params['episodes'] / 5)
     agent = Dueling_Per_DDQNAgent(env, rl_params)
     agent.load_model(model_dir)
@@ -79,10 +79,10 @@ elif train_type == 'test_transfer_learning':
     HER = False
 elif train_type == 'test_no_sim':
     rl_params['epsilon'] = 0
-    rl_params['episodes'] = 100
+    rl_params['episodes'] = 20
     avg_rew_size = int(rl_params['episodes'] / 5)
     agent = Dueling_Per_DDQNAgent(env, rl_params)
-    model_dir = "D:/Users/Josh/github/individual_project/physical/phys_agents/{}_no_sim_phys_Dueling Double Per_new.h5".format(environment)
+    model_dir = "D:/Users/Josh/github/individual_project/physical/phys_agents/arrow_no_sim_phys_Dueling Double Per.h5"
     agent.load_model(model_dir)
     HER = False
 else:
