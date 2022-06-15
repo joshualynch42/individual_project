@@ -524,3 +524,104 @@ class her():
             new_reward = 0
 
         return (temp_current_state, action, new_reward, temp_new_state, done)
+
+class phys_discrete_alphabet_env_new(Env):
+    def __init__(self, current_letter, goal_letter):
+        self.current_step = 0
+        self.starting_letter = current_letter
+        self.goal_letter = goal_letter
+        self.current_coords = letter_to_coords(self.starting_letter)
+        self.action_array = np.array(['upleft', 'upright', 'left', 'right', 'downleft', 'downright', 'pressdown'])
+        self.state = create_state(get_image(self.current_coords), self.goal_letter)
+        self.img_shape = np.shape(get_image(self.current_coords))
+        self.max_ep_len = 16
+        self.action_space_size = len(self.action_array)
+
+    def reset(self, current_letter, goal_letter):
+        self.current_step = 0
+        self.starting_letter = current_letter
+        self.goal_letter = goal_letter
+        self.current_coords = letter_to_coords(self.starting_letter)
+        move_phys_dobot(self.current_coords)
+        self.state = create_state(get_image(self.current_coords), self.goal_letter)
+
+        return self.state
+
+    def move_dobot(self, action):
+        self.current_coords = translate_coord(self.current_coords) #turn coords into imaginary coords
+
+        if action == 'upleft':
+            if self.current_coords[0] == 3 and self.current_coords[1] == 14:
+                self.current_coords = np.array([2, 11, -25])
+            elif self.current_coords[0] > 0 and self.current_coords[1] > 0:
+                self.current_coords = self.current_coords + np.array([-1, -1, 0])
+
+        elif action == 'upright':
+            if self.current_coords[0] == 3 and self.current_coords[1] == 14:
+                self.current_coords = np.array([2, 14, -25])
+            elif self.current_coords[0] > 0:
+                self.current_coords = self.current_coords + np.array([-1, 2, 0])
+
+        elif action == 'left':
+            if self.current_coords[0] < 3 and self.current_coords[1] > 2:
+                self.current_coords = self.current_coords + np.array([0, -3, 0])
+
+        elif action == 'right':
+            if self.current_coords[0] < 2 and self.current_coords[1] < 25:
+                self.current_coords = self.current_coords + np.array([0, 3, 0])
+            elif self.current_coords[0] < 3 and self.current_coords[1] < 18:
+                self.current_coords = self.current_coords + np.array([0, 3, 0])
+
+        elif action == 'downleft':
+            if self.current_coords[0] == 1 and self.current_coords[1] > 24:
+                pass
+            elif self.current_coords[0] < 2 and self.current_coords[1] > 2:
+                self.current_coords = self.current_coords + np.array([1, -2, 0])
+            elif self.current_coords[0] == 2 and self.current_coords[1] > 5: # bottom row not z or x
+                self.current_coords = np.array([3, 14, -25])
+
+        elif action == 'downright':
+            if self.current_coords[0] == 1 and self.current_coords[1] > 19:
+                pass
+            elif self.current_coords[0] < 2 and self.current_coords[1] < 25:
+                self.current_coords = self.current_coords + np.array([1, 1, 0])
+            elif self.current_coords[0] == 2 and self.current_coords[1] > 2: # bottom row not z
+                self.current_coords = np.array([3, 14, -25])
+
+        else:
+            print('Error: Not a valid action')
+            exit()
+        self.current_coords = translate_coord(self.current_coords) #turn coords into real
+        move_phys_dobot(self.current_coords) #move robot to new coords
+        current_img = get_image(self.current_coords) #get new image of state
+        self.state = create_state(current_img, self.goal_letter)
+
+    def step(self, action, steps):
+        done = False
+        info = []
+        if steps > self.max_ep_len -1:
+            reward = 0
+        else:
+            action = self.action_array[action]
+            if action == 'pressdown':
+                done = True
+                # press_phys_dobot(self.current_coords) # move dobot to press key
+                # actual_let = get_key() # get key press from console
+                # print('actual letter', actual_let)
+                cur_let = coords_to_letter(self.current_coords)
+                goal_let = self.goal_letter
+                if cur_let == goal_let:
+                    reward = 1
+                else:
+                    reward = 0
+            else:
+                reward = 0
+                prev_state = self.current_coords
+                self.move_dobot(action)
+                if np.array_equal(prev_state, self.current_coords, equal_nan=False):
+                    reward = 0  # potential punishment for not leaving the key
+
+        return self.state, reward, done, info
+
+    def render(self):
+        pass
