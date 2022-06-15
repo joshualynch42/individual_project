@@ -1,6 +1,7 @@
 import sys
 sys.path.insert(1, 'D:/Users/Josh/github/individual_project/simulation')
 from phys_utils import *
+from dueling_ddqn_per import *
 import random
 import time
 import numpy as np
@@ -18,6 +19,17 @@ current_letter = 'DOWN'
 goal_letter = 'DOWN'
 env_r = phys_discrete_arrow_env_pong(current_letter, goal_letter)
 
+rl_params = {
+'replay_memory_size': 10000,
+'minibatch_size': 64,
+'epsilon_decay': 0, # for alphabet
+'discount': 0,
+'min_replay_memory_size': 200,
+'min_epsilon': 0,
+'epsilon': 0,
+'update_target_every': 1,
+'episodes': 10
+}
 agent_dir = "D:/Users/Josh/github/individual_project/physical/phys_agents/arrow_phys_Dueling Double Per.h5"
 agent = Dueling_Per_DDQNAgent(env_r, rl_params)
 agent.load_model(agent_dir)
@@ -26,7 +38,7 @@ def get_discrete_state(state):
     discrete_state = (state - env.observation_space.low)/discrete_os_win_size
     return tuple(discrete_state.astype(np.int32))
 
-hf = h5py.File('D:\Josh\github\individual_project\simulation\sim_agents\mount_cart.h5', 'r')
+hf = h5py.File('D:/Users/Josh/github/individual_project/simulation/sim_agents/mount_cart.h5', 'r')
 n1 = hf.get('q_table')
 q_table = np.array(n1)
 
@@ -42,7 +54,7 @@ for episode in range(1, 2):
         if skip_counter % skip_actions == 0:
             skip_counter = 0
             action = np.argmax(q_table[discrete_state]) # mountain car q-table predicts action
-            goal_letter = action_to_key_arr[action_p[0]] # action to goal key for robot
+            goal_letter = action_to_key_arr[action] # action to goal key for robot
             current_state_r = env_r.reset(current_letter, goal_letter) # reset robot env for goal key
             action_r = agent.act(current_state_r) # predict action for robot using new goal key
             new_state_r, reward, done, _ = env_r.step(action_r, steps=0) # execute action/ move to key
@@ -53,7 +65,7 @@ for episode in range(1, 2):
             else:
                 action_m = [random.randint(0, len(key_to_action_dict)-1)] # else chose a random action
 
-        new_state, reward, done, info = env.step(action_m) # update mountain car env
+        new_state, reward, done, info = env.step(action_m[0]) # update mountain car env
         new_discrete_state = get_discrete_state(new_state) # turn new state into a discrete space
 
         env.render()

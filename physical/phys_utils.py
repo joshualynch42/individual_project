@@ -32,7 +32,7 @@ def make_sensor(): # amcap: reset all settings; autoexposure off; saturdation ma
 
 sensor = make_sensor()
 robot = SyncRobot(Controller())
-robot.linear_speed = 60
+robot.linear_speed = 70
 robot.coord_frame = [0, 0, 0, 0, 0, 0] # careful
 
 def translate_coord(coords):
